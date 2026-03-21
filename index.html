@@ -565,7 +565,7 @@
       <input type="hidden" name="_subject" value="New ReplyDrop Support Message" />
       <input type="hidden" name="_captcha" value="false" />
       <input type="hidden" name="_template" value="table" />
-      <input type="hidden" name="_next" value="https://peaceful-genie-792ebb.netlify.app/#contact" />
+      <input type="hidden" name="_next" value="https://replydrop-site.onrender.com/#contact" />
       <input type="text" name="_honey" style="display:none" />
       <div class="field"><label>Your name</label><input type="text" name="name" placeholder="Jane Smith" required /></div>
       <div class="field"><label>Your email</label><input type="email" name="email" placeholder="you@email.com" required /></div>
@@ -694,24 +694,21 @@ async function sendMagicLink() {
   if (!email || !email.includes('@')) { showMsg('loginMsg', 'Please enter a valid email.', 'error'); return; }
   setLoading('loginBtn', 'loginSpin', 'loginBtnTxt', true, 'Sending…');
   try {
-    const { error } = await sb.auth.signInWithOtp({
-      email,
-      options: { emailRedirectTo: 'https://peaceful-genie-792ebb.netlify.app' }
+    const res = await fetch(`${BACKEND}/send-magic-link`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email })
     });
-    if (error) { 
-      console.log('Magic link error:', error);
-      showMsg('loginMsg', 'Error: ' + error.message, 'error'); 
-      setLoading('loginBtn', 'loginSpin', 'loginBtnTxt', false, 'Send magic link');
-      return; 
-    }
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Failed to send');
+    document.getElementById('sentTo').textContent = email;
+    document.getElementById('loginForm').style.display = 'none';
+    document.getElementById('magicSent').classList.add('visible');
   } catch(e) {
-    console.log('Magic link exception:', e);
-    // Continue anyway — OTP may have been sent
+    console.error('Magic link error:', e);
+    showMsg('loginMsg', 'Error sending link: ' + e.message, 'error');
   }
   setLoading('loginBtn', 'loginSpin', 'loginBtnTxt', false, 'Send magic link');
-  document.getElementById('sentTo').textContent = email;
-  document.getElementById('loginForm').style.display = 'none';
-  document.getElementById('magicSent').classList.add('visible');
 }
 
 async function signOut() {
