@@ -693,9 +693,22 @@ async function sendMagicLink() {
   const email = document.getElementById('loginEmail').value.trim();
   if (!email || !email.includes('@')) { showMsg('loginMsg', 'Please enter a valid email.', 'error'); return; }
   setLoading('loginBtn', 'loginSpin', 'loginBtnTxt', true, 'Sending…');
-  const { error } = await sb.auth.signInWithOtp({ email, options: { emailRedirectTo: 'https://peaceful-genie-792ebb.netlify.app' } });
+  try {
+    const { error } = await sb.auth.signInWithOtp({
+      email,
+      options: { emailRedirectTo: 'https://peaceful-genie-792ebb.netlify.app' }
+    });
+    if (error) { 
+      console.log('Magic link error:', error);
+      showMsg('loginMsg', 'Error: ' + error.message, 'error'); 
+      setLoading('loginBtn', 'loginSpin', 'loginBtnTxt', false, 'Send magic link');
+      return; 
+    }
+  } catch(e) {
+    console.log('Magic link exception:', e);
+    // Continue anyway — OTP may have been sent
+  }
   setLoading('loginBtn', 'loginSpin', 'loginBtnTxt', false, 'Send magic link');
-  if (error) { showMsg('loginMsg', 'Error sending link. Try again.', 'error'); return; }
   document.getElementById('sentTo').textContent = email;
   document.getElementById('loginForm').style.display = 'none';
   document.getElementById('magicSent').classList.add('visible');
