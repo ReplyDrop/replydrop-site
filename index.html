@@ -253,7 +253,7 @@
     <div class="modal-logo"><span class="logo-dot"></span>ReplyDrop</div>
     <h2>Upgrade to Pro ✦</h2>
     <p class="modal-desc">You've hit your 5 free replies for today. Go unlimited for less than a coffee a week.</p>
-    <a href="https://buy.stripe.com/test_4gM4gBdxs9qS8RK6zjcZa01" target="_blank" class="modal-btn" style="text-decoration:none">Get Pro — $19/month</a>
+    <a href="https://buy.stripe.com/00wdR25w0bvHbzj1Eh0Ba00" target="_blank" class="modal-btn" style="text-decoration:none">Get Pro — $19/month</a>
     <div class="modal-divider">already a member?</div>
     <button class="modal-btn light" onclick="closeModal('upgradeModal');openModal('loginModal')">Sign in to my account</button>
     <div class="modal-note" style="margin-top:12px">Free replies reset at midnight · No card required for free tier</div>
@@ -537,7 +537,7 @@
           <li><span class="ck">✓</span> Email-tied secure access</li>
           <li><span class="ck">✓</span> Cancel anytime</li>
         </ul>
-        <button class="plan-btn pbd" onclick="window.open('https://buy.stripe.com/test_4gM4gBdxs9qS8RK6zjcZa01','_blank')">Get Pro — $19/mo</button>
+        <button class="plan-btn pbd" onclick="window.open('https://buy.stripe.com/00wdR25w0bvHbzj1Eh0Ba00','_blank')">Get Pro — $19/mo</button>
       </div>
       <div class="plan">
         <div class="plan-name" style="display:flex;align-items:center;justify-content:space-between">Business<span style="font-size:10px;font-weight:600;background:#FAEEDA;color:#633806;padding:2px 8px;border-radius:100px;letter-spacing:0.05em">COMING SOON</span></div>
@@ -573,7 +573,7 @@
       <div class="field"><label>Message</label><textarea name="message" rows="5" placeholder="Tell us what's on your mind…" required></textarea></div>
       <button type="submit" class="contact-btn">Send message</button>
     </form>
-    <div class="contact-alt">Or email directly: <a href="mailto:support@replydrop.ai">support@replydrop.ai</a></div>
+    <div class="contact-alt">Or email directly: <a href="/cdn-cgi/l/email-protection#7d0e080d0d120f093d0f180d1104190f120d531c14"><span class="__cf_email__" data-cfemail="f685838686998482b68493869a8f92849986d8979f">[email&#160;protected]</span></a></div>
   </div>
 </section>
 
@@ -584,13 +584,13 @@
     <div class="footer-links">
       <a href="#pricing">Pricing</a>
       <a href="#contact">Support</a>
-      <a href="mailto:support@replydrop.ai">support@replydrop.ai</a>
+      <a href="/cdn-cgi/l/email-protection#43303633332c3137033126332f3a27312c336d222a"><span class="__cf_email__" data-cfemail="7704020707180503370512071b0e1305180759161e">[email&#160;protected]</span></a>
     </div>
     <p>© 2026 ReplyDrop · Drop the perfect reply, every time.</p>
   </div>
 </footer>
 
-<script>
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
 const SUPABASE_URL = 'https://gmhdhodlgoejzzxdkduq.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdtaGRob2RsZ29lanp6eGRrZHVxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM4OTc1OTgsImV4cCI6MjA4OTQ3MzU5OH0.KjOHPMMn3mlXH6yd8xFXK3rOilmJloWex7R2HLonngU';
 const BACKEND = 'https://replydrop-backend.onrender.com';
@@ -875,20 +875,4 @@ function showMsg(id, text, type) {
   }
   window.slideReviews = function(dir) { goTo(current + dir); };
   function sliderInit() { perPage = getPerPage(); current = 0; buildDots(); goTo(0); }
-  window.addEventListener('resize', () => { perPage = getPerPage(); buildDots(); goTo(0); });
-  sliderInit();
-})();
-
-function checkPaymentSuccess() {
-  const params = new URLSearchParams(window.location.search);
-  if (params.get('payment') === 'success') {
-    window.history.replaceState({}, '', '/');
-    document.getElementById('paymentSuccessModal').classList.add('open');
-  }
-}
-
-init();
-checkPaymentSuccess();
-</script>
-</body>
-</html>
+  window.addEventListener('resize', () => { perPage = getPe
