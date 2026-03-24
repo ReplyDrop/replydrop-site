@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ReplyDrop — AI Reply Generator</title>
+<title>ReplyDrop — AI Reply Generator v4</title>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
@@ -64,7 +64,7 @@
   .magic-sent h3 { font-family: var(--font-head); font-size: 22px; font-weight: 700; margin-bottom: 8px; }
   .magic-sent p { font-size: 14px; color: var(--ink2); line-height: 1.6; }
   .hero { min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 120px 24px 80px; position: relative; overflow: hidden; text-align: center; }
-  .hero-bg { position: absolute; inset: 0; z-index: 0; background: radial-gradient(ellipse 80% 60% at 50% 0%, #ffe8e0 0%, transparent 70%); }
+  .hero-bg { position: absolute; inset: 0; z-index: 0; background: radial-gradient(ellipse 80% 60% at 50% 0%, #ffe8e0 0%, transparent 70%); pointer-events: none; }
   .hero-tag { display: inline-flex; align-items: center; gap: 8px; background: var(--drop-light); color: var(--drop); border: 1px solid rgba(255,77,28,0.2); padding: 6px 16px; border-radius: 100px; font-size: 13px; font-weight: 500; margin-bottom: 28px; position: relative; z-index: 1; animation: fadeUp 0.6s ease both; }
   .hero h1 { font-family: var(--font-head); font-size: clamp(44px, 7vw, 80px); font-weight: 800; line-height: 1.0; letter-spacing: -3px; color: var(--ink); max-width: 900px; margin-bottom: 24px; position: relative; z-index: 1; animation: fadeUp 0.6s 0.1s ease both; }
   .hero h1 span { color: var(--drop); }
@@ -573,7 +573,7 @@
       <div class="field"><label>Message</label><textarea name="message" rows="5" placeholder="Tell us what's on your mind…" required></textarea></div>
       <button type="submit" class="contact-btn">Send message</button>
     </form>
-    <div class="contact-alt">Or email directly: <a href="/cdn-cgi/l/email-protection#681b1d1818071a1c281a0d1804110c1a0718460901"><span class="__cf_email__" data-cfemail="5625232626392422162433263a2f3224392678373f">[email&#160;protected]</span></a></div>
+    <div class="contact-alt">Or email directly: <a href="/cdn-cgi/l/email-protection#3d4e484d4d524f497d4f584d5144594f524d135c54"><span class="__cf_email__" data-cfemail="9be8eeebebf4e9efdbe9feebf7e2ffe9f4ebb5faf2">[email&#160;protected]</span></a></div>
   </div>
 </section>
 
@@ -584,7 +584,7 @@
     <div class="footer-links">
       <a href="#pricing">Pricing</a>
       <a href="#contact">Support</a>
-      <a href="/cdn-cgi/l/email-protection#5625232626392422162433263a2f3224392678373f"><span class="__cf_email__" data-cfemail="52212722223d2026122037223e2b36203d227c333b">[email&#160;protected]</span></a>
+      <a href="/cdn-cgi/l/email-protection#ccbfb9bcbca3beb88cbea9bca0b5a8bea3bce2ada5"><span class="__cf_email__" data-cfemail="f88b8d8888978a8cb88a9d8894819c8a9788d69991">[email&#160;protected]</span></a>
     </div>
     <p>© 2026 ReplyDrop · Drop the perfect reply, every time.</p>
   </div>
@@ -743,7 +743,19 @@ document.querySelectorAll('.tone-btn').forEach(btn => {
 function getTone() {
   const a = document.querySelector('.tone-btn.active');
   if (!a) return 'Professional';
-  if (a.dataset.tone === 'Custom') { const v = document.getElementById('customTone').value.trim(); return v || ('upgradeModal'); return; }
+  if (a.dataset.tone === 'Custom') { const v = document.getElementById('customTone').value.trim(); return v || 'Professional'; }
+  return a.dataset.tone;
+}
+
+function copyReply(btn, text) {
+  navigator.clipboard.writeText(text).then(() => {
+    btn.textContent = '✓ Copied!'; btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 2000);
+  });
+}
+
+async function generateReplies() {
+  if (!isPro && usedToday >= FREE_LIMIT) { openModal('upgradeModal'); return; }
   const input = document.getElementById('inputText').value.trim();
   if (!input) { document.getElementById('inputText').focus(); return; }
   const tone = getTone();
@@ -863,20 +875,4 @@ function showMsg(id, text, type) {
   }
   window.slideReviews = function(dir) { goTo(current + dir); };
   function sliderInit() { perPage = getPerPage(); current = 0; buildDots(); goTo(0); }
-  window.addEventListener('resize', () => { perPage = getPerPage(); buildDots(); goTo(0); });
-  sliderInit();
-})();
-
-function checkPaymentSuccess() {
-  const params = new URLSearchParams(window.location.search);
-  if (params.get('payment') === 'success') {
-    window.history.replaceState({}, '', '/');
-    document.getElementById('paymentSuccessModal').classList.add('open');
-  }
-}
-
-init();
-checkPaymentSuccess();
-</script>
-</body>
-</html>
+  window.addEventListener('resize', () => { perPage = getPe
