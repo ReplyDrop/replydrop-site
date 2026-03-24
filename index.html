@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ReplyDrop — AI Reply Generator v4</title>
+<title>ReplyDrop — AI Reply Generator</title>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
@@ -573,7 +573,7 @@
       <div class="field"><label>Message</label><textarea name="message" rows="5" placeholder="Tell us what's on your mind…" required></textarea></div>
       <button type="submit" class="contact-btn">Send message</button>
     </form>
-    <div class="contact-alt">Or email directly: <a href="/cdn-cgi/l/email-protection#7d0e080d0d120f093d0f180d1104190f120d531c14"><span class="__cf_email__" data-cfemail="f685838686998482b68493869a8f92849986d8979f">[email&#160;protected]</span></a></div>
+    <div class="contact-alt">Or email directly: <a href="/cdn-cgi/l/email-protection#681b1d1818071a1c281a0d1804110c1a0718460901"><span class="__cf_email__" data-cfemail="5625232626392422162433263a2f3224392678373f">[email&#160;protected]</span></a></div>
   </div>
 </section>
 
@@ -584,7 +584,7 @@
     <div class="footer-links">
       <a href="#pricing">Pricing</a>
       <a href="#contact">Support</a>
-      <a href="/cdn-cgi/l/email-protection#43303633332c3137033126332f3a27312c336d222a"><span class="__cf_email__" data-cfemail="7704020707180503370512071b0e1305180759161e">[email&#160;protected]</span></a>
+      <a href="/cdn-cgi/l/email-protection#5625232626392422162433263a2f3224392678373f"><span class="__cf_email__" data-cfemail="52212722223d2026122037223e2b36203d227c333b">[email&#160;protected]</span></a>
     </div>
     <p>© 2026 ReplyDrop · Drop the perfect reply, every time.</p>
   </div>
@@ -743,19 +743,7 @@ document.querySelectorAll('.tone-btn').forEach(btn => {
 function getTone() {
   const a = document.querySelector('.tone-btn.active');
   if (!a) return 'Professional';
-  if (a.dataset.tone === 'Custom') { const v = document.getElementById('customTone').value.trim(); return v || 'Professional'; }
-  return a.dataset.tone;
-}
-
-function copyReply(btn, text) {
-  navigator.clipboard.writeText(text).then(() => {
-    btn.textContent = '✓ Copied!'; btn.classList.add('copied');
-    setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 2000);
-  });
-}
-
-async function generateReplies() {
-  if (!isPro && usedToday >= FREE_LIMIT) { openModal('upgradeModal'); return; }
+  if (a.dataset.tone === 'Custom') { const v = document.getElementById('customTone').value.trim(); return v || ('upgradeModal'); return; }
   const input = document.getElementById('inputText').value.trim();
   if (!input) { document.getElementById('inputText').focus(); return; }
   const tone = getTone();
@@ -875,4 +863,20 @@ function showMsg(id, text, type) {
   }
   window.slideReviews = function(dir) { goTo(current + dir); };
   function sliderInit() { perPage = getPerPage(); current = 0; buildDots(); goTo(0); }
-  window.addEventListener('resize', () => { perPage = getPe
+  window.addEventListener('resize', () => { perPage = getPerPage(); buildDots(); goTo(0); });
+  sliderInit();
+})();
+
+function checkPaymentSuccess() {
+  const params = new URLSearchParams(window.location.search);
+  if (params.get('payment') === 'success') {
+    window.history.replaceState({}, '', '/');
+    document.getElementById('paymentSuccessModal').classList.add('open');
+  }
+}
+
+init();
+checkPaymentSuccess();
+</script>
+</body>
+</html>
