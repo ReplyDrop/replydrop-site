@@ -607,8 +607,39 @@ async function init() {
   const saved = JSON.parse(localStorage.getItem('rd_usage') || '{}');
   usedToday = saved.date === today ? (saved.count || 0) : 0;
   if (saved.date !== today) saveUsage();
+
+  // Let Supabase JS process any tokens in the URL hash FIRST
+  // before we call getSession() — this is critical for magic link flow
+  const hash = window.location.hash;
+  const hasToken = hash && (hash.includes('access_token') || hash.includes('error'));
+
+  if (hasToken) {
+    // Give Supabase JS time to process the hash and establish the session
+    await new Promise(r => setTimeout(r, 1000));
+  }
+
+  // Handle error in hash (e.g. otp_expired) — show friendly message
+  if (hash && hash.includes('error=')) {
+    const params = new URLSearchParams(hash.replace('#', ''));
+    const errDesc = params.get('error_description') || 'Link expired';
+    console.warn('Auth error in URL:', errDesc);
+    // Clean the URL
+    history.replaceState(null, '', window.location.pathname);
+    // Show login modal with error after a short delay
+    setTimeout(() => {
+      openModal('loginModal');
+      showMsg('loginMsg', 'That link expired — please request a new one.', 'error');
+    }, 500);
+  }
+
+  // Clean up the URL hash after Supabase has processed it
+  if (hasToken && !hash.includes('error=')) {
+    history.replaceState(null, '', window.location.pathname);
+  }
+
   const { data: { session } } = await sb.auth.getSession();
   if (session) await onSession(session);
+
   sb.auth.onAuthStateChange(async (_evt, session) => {
     if (session) { await onSession(session); closeModal('loginModal'); }
     else { user = null; isPro = false; updateUI(); }
@@ -619,16 +650,30 @@ async function init() {
 async function onSession(session) {
   user = session.user;
   isPro = false;
-  try {
-    const res = await fetch(`${BACKEND}/check-pro`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email: user.email.toLowerCase().trim() })
-    });
-    const data = await res.json();
-    isPro = data.isPro === true;
-  } catch(e) { isPro = false; }
-  updateUI();
+  updateUI(); // show logged-in name immediately while pro check runs
+
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    try {
+      console.log('check-pro attempt', attempt, 'for', user.email);
+      const controller = new AbortController();
+      const t = setTimeout(() => controller.abort(), 15000);
+      const res = await fetch(`${BACKEND}/check-pro`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: user.email.toLowerCase().trim() }),
+        signal: controller.signal
+      });
+      clearTimeout(t);
+      const data = await res.json();
+      console.log('check-pro response:', data);
+      isPro = data.isPro === true;
+      updateUI();
+      break;
+    } catch(e) {
+      console.warn('check-pro attempt', attempt, 'failed:', e.message);
+      if (attempt < 3) await new Promise(r => setTimeout(r, 3000));
+    }
+  }
 }
 
 function updateUI() {
