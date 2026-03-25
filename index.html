@@ -692,24 +692,47 @@ function saveUsage() {
 async function sendMagicLink() {
   const email = document.getElementById('loginEmail').value.trim();
   if (!email || !email.includes('@')) { showMsg('loginMsg', 'Please enter a valid email.', 'error'); return; }
+
+  // Wake up backend in case it's cold (fire-and-forget)
+  fetch(`${BACKEND}/`).catch(() => {});
+
   setLoading('loginBtn', 'loginSpin', 'loginBtnTxt', true, 'Sending…');
   try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 60000); // 60s timeout for cold starts
+
     const res = await fetch(`${BACKEND}/send-magic-link`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email })
+      body: JSON.stringify({ email }),
+      signal: controller.signal
     });
+    clearTimeout(timeout);
+
     const data = await res.json();
-    if (!res.ok) throw new Error(data.error || 'Failed to send');
-    document.getElementById('sentTo').textContent = email;
-    document.getElementById('loginForm').style.display = 'none';
-    document.getElementById('magicSent').classList.add('visible');
+
+    // 429 = rate limited but email was already sent — treat as success
+    if (res.ok || res.status === 429) {
+      document.getElementById('sentTo').textContent = email;
+      document.getElementById('loginForm').style.display = 'none';
+      document.getElementById('magicSent').classList.add('visible');
+    } else {
+      throw new Error(data.error || 'Failed to send');
+    }
   } catch(e) {
     console.error('Magic link error:', e);
-    showMsg('loginMsg', 'Error sending link: ' + e.message, 'error');
+    if (e.name === 'AbortError') {
+      showMsg('loginMsg', 'Server is waking up — please try again in 30 seconds.', 'error');
+    } else {
+      showMsg('loginMsg', 'Error sending link: ' + e.message, 'error');
+    }
   }
   setLoading('loginBtn', 'loginSpin', 'loginBtnTxt', false, 'Send magic link');
 }
+
+// Keep backend warm while page is open (prevents cold start delays)
+function keepBackendWarm() { fetch(`${BACKEND}/`).catch(() => {}); }
+setInterval(keepBackendWarm, 10 * 60 * 1000); // ping every 10 minutes
 
 async function signOut() {
   await sb.auth.signOut();
