@@ -227,22 +227,34 @@
   <div class="modal">
     <button class="modal-close" onclick="closeModal('loginModal')">×</button>
     <div class="modal-logo"><span class="logo-dot"></span>ReplyDrop</div>
-    <div id="loginForm">
+
+    <!-- STEP 1: Enter email -->
+    <div id="loginStep1">
       <h2>Sign in</h2>
-      <p class="modal-desc">Enter your email — we'll send a magic link. No password ever needed.</p>
-      <input class="modal-input" type="email" id="loginEmail" placeholder="you@email.com" />
-      <button class="modal-btn" id="loginBtn" onclick="sendMagicLink()">
-        <span id="loginBtnTxt">Send magic link</span>
+      <p class="modal-desc">Enter your email — we'll send a 6-digit code. No password ever needed.</p>
+      <input class="modal-input" type="email" id="loginEmail" placeholder="you@email.com" autocomplete="email" />
+      <button class="modal-btn" id="loginBtn" onclick="sendOtpCode()">
+        <span id="loginBtnTxt">Send code</span>
         <div class="spinner" id="loginSpin"></div>
       </button>
       <div class="modal-msg" id="loginMsg"></div>
       <div class="modal-note">By signing in you agree to our <a href="#">Terms</a> &amp; <a href="#">Privacy Policy</a>.</div>
     </div>
-    <div class="magic-sent" id="magicSent">
+
+    <!-- STEP 2: Enter 6-digit code -->
+    <div id="loginStep2" style="display:none">
       <div class="magic-sent-icon">📬</div>
-      <h3>Check your inbox!</h3>
-      <p>We emailed a magic link to <strong id="sentTo"></strong>.<br>Click it to sign in — link expires in 1 hour.</p>
+      <h2>Check your inbox</h2>
+      <p class="modal-desc">We sent a 6-digit code to <strong id="sentTo"></strong>. Enter it below — expires in 10 minutes.</p>
+      <input class="modal-input" type="text" id="otpCode" placeholder="000000" maxlength="6" inputmode="numeric" autocomplete="one-time-code" style="font-size:28px;letter-spacing:10px;text-align:center;font-weight:700;" />
+      <button class="modal-btn" id="verifyBtn" onclick="verifyOtpCode()">
+        <span id="verifyBtnTxt">Verify &amp; sign in</span>
+        <div class="spinner" id="verifySpin"></div>
+      </button>
+      <div class="modal-msg" id="otpMsg"></div>
+      <div class="modal-note"><a href="#" onclick="backToEmail()">← Use a different email</a></div>
     </div>
+
   </div>
 </div>
 
@@ -634,7 +646,7 @@ async function init() {
     history.replaceState(null, '', window.location.pathname);
     setTimeout(() => {
       openModal('loginModal');
-      showMsg('loginMsg', 'That link expired — please request a new one.', 'error');
+      showMsg('loginMsg', 'Please enter your email to sign in.', 'error');
     }, 500);
   }
 
@@ -735,25 +747,55 @@ function saveUsage() {
   localStorage.setItem('rd_usage', JSON.stringify({ date: new Date().toDateString(), count: usedToday }));
 }
 
-async function sendMagicLink() {
+async function sendOtpCode() {
   const email = document.getElementById('loginEmail').value.trim();
   if (!email || !email.includes('@')) { showMsg('loginMsg', 'Please enter a valid email.', 'error'); return; }
   setLoading('loginBtn', 'loginSpin', 'loginBtnTxt', true, 'Sending…');
   try {
-    // Use Supabase JS directly — bypasses backend, tokens never expire in transit
     const { error } = await sb.auth.signInWithOtp({
       email: email.toLowerCase().trim(),
-      options: { emailRedirectTo: 'https://replydrop.ai' }
+      options: { shouldCreateUser: true }
     });
     if (error) throw new Error(error.message);
+    // Show step 2 — code entry
     document.getElementById('sentTo').textContent = email;
-    document.getElementById('loginForm').style.display = 'none';
-    document.getElementById('magicSent').classList.add('visible');
+    document.getElementById('loginStep1').style.display = 'none';
+    document.getElementById('loginStep2').style.display = 'block';
+    setTimeout(() => document.getElementById('otpCode').focus(), 100);
   } catch(e) {
-    console.error('Magic link error:', e);
-    showMsg('loginMsg', 'Error sending link: ' + e.message, 'error');
+    console.error('OTP send error:', e);
+    showMsg('loginMsg', 'Error sending code: ' + e.message, 'error');
   }
-  setLoading('loginBtn', 'loginSpin', 'loginBtnTxt', false, 'Send magic link');
+  setLoading('loginBtn', 'loginSpin', 'loginBtnTxt', false, 'Send code');
+}
+
+async function verifyOtpCode() {
+  const email = document.getElementById('sentTo').textContent.trim();
+  const token = document.getElementById('otpCode').value.trim().replace(/\s/g, '');
+  if (token.length !== 6) { showMsg('otpMsg', 'Please enter the 6-digit code.', 'error'); return; }
+  setLoading('verifyBtn', 'verifySpin', 'verifyBtnTxt', true, 'Verifying…');
+  try {
+    const { data, error } = await sb.auth.verifyOtp({
+      email: email,
+      token: token,
+      type: 'email'
+    });
+    if (error) throw new Error(error.message);
+    // Success — onAuthStateChange will fire and handle the rest
+    closeModal('loginModal');
+  } catch(e) {
+    console.error('OTP verify error:', e);
+    showMsg('otpMsg', 'Invalid or expired code — please try again.', 'error');
+  }
+  setLoading('verifyBtn', 'verifySpin', 'verifyBtnTxt', false, 'Verify & sign in');
+}
+
+function backToEmail() {
+  document.getElementById('loginStep2').style.display = 'none';
+  document.getElementById('loginStep1').style.display = 'block';
+  document.getElementById('otpCode').value = '';
+  document.getElementById('otpMsg').textContent = '';
+  return false;
 }
 
 // Keep backend warm while page is open
@@ -769,11 +811,14 @@ function openModal(id) { document.getElementById(id).classList.add('open'); }
 function closeModal(id) {
   document.getElementById(id).classList.remove('open');
   if (id === 'loginModal') {
-    document.getElementById('loginForm').style.display = 'block';
-    document.getElementById('magicSent').classList.remove('visible');
+    document.getElementById('loginStep1').style.display = 'block';
+    document.getElementById('loginStep2').style.display = 'none';
     document.getElementById('loginEmail').value = '';
+    document.getElementById('otpCode').value = '';
     document.getElementById('loginMsg').className = 'modal-msg';
     document.getElementById('loginMsg').textContent = '';
+    document.getElementById('otpMsg').className = 'modal-msg';
+    document.getElementById('otpMsg').textContent = '';
   }
 }
 document.querySelectorAll('.modal-overlay').forEach(o => {
@@ -842,6 +887,9 @@ async function generateReplies() {
 
 document.getElementById('inputText').addEventListener('keydown', e => {
   if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') generateReplies();
+});
+document.getElementById('otpCode').addEventListener('keydown', e => {
+  if (e.key === 'Enter') verifyOtpCode();
 });
 
 function toggleCustomFeature(val) {
