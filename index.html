@@ -596,7 +596,11 @@ const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
 const BACKEND = 'https://replydrop-backend.onrender.com';
 const FREE_LIMIT = 5;
 const { createClient } = supabase;
-const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
+const sb = createClient(SUPABASE_URL, SUPABASE_KEY, {
+  auth: {
+    flowType: 'pkce'
+  }
+});
 
 let user = null;
 let isPro = false;
@@ -608,33 +612,30 @@ async function init() {
   usedToday = saved.date === today ? (saved.count || 0) : 0;
   if (saved.date !== today) saveUsage();
 
-  // Let Supabase JS process any tokens in the URL hash FIRST
-  // before we call getSession() — this is critical for magic link flow
-  const hash = window.location.hash;
-  const hasToken = hash && (hash.includes('access_token') || hash.includes('error'));
-
-  if (hasToken) {
-    // Give Supabase JS time to process the hash and establish the session
-    await new Promise(r => setTimeout(r, 1000));
+  // PKCE flow: Supabase sends ?code= param instead of #hash (bypasses Cloudflare hash stripping)
+  const params = new URLSearchParams(window.location.search);
+  const code = params.get('code');
+  if (code) {
+    try {
+      console.log('Exchanging PKCE code for session...');
+      const { data, error } = await sb.auth.exchangeCodeForSession(code);
+      if (error) throw error;
+      console.log('PKCE exchange success:', data.session?.user?.email);
+    } catch(e) {
+      console.error('PKCE exchange error:', e.message);
+    }
+    // Clean up the URL — remove ?code= from address bar
+    history.replaceState(null, '', window.location.pathname);
   }
 
-  // Handle error in hash (e.g. otp_expired) — show friendly message
+  // Handle error in URL (e.g. otp_expired)
+  const hash = window.location.hash;
   if (hash && hash.includes('error=')) {
-    const params = new URLSearchParams(hash.replace('#', ''));
-    const errDesc = params.get('error_description') || 'Link expired';
-    console.warn('Auth error in URL:', errDesc);
-    // Clean the URL
     history.replaceState(null, '', window.location.pathname);
-    // Show login modal with error after a short delay
     setTimeout(() => {
       openModal('loginModal');
       showMsg('loginMsg', 'That link expired — please request a new one.', 'error');
     }, 500);
-  }
-
-  // Clean up the URL hash after Supabase has processed it
-  if (hasToken && !hash.includes('error=')) {
-    history.replaceState(null, '', window.location.pathname);
   }
 
   const { data: { session } } = await sb.auth.getSession();
