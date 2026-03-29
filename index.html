@@ -577,7 +577,7 @@
       <input type="hidden" name="_subject" value="New ReplyDrop Support Message" />
       <input type="hidden" name="_captcha" value="false" />
       <input type="hidden" name="_template" value="table" />
-      <input type="hidden" name="_next" value="https://replydrop.ai/#contact" />
+      <input type="hidden" name="_next" value="https://replydrop-site.onrender.com/#contact" />
       <input type="text" name="_honey" style="display:none" />
       <div class="field"><label>Your name</label><input type="text" name="name" placeholder="Jane Smith" required /></div>
       <div class="field"><label>Your email</label><input type="email" name="email" placeholder="you@email.com" required /></div>
@@ -869,7 +869,7 @@ async function generateReplies() {
     if (!res.ok) throw new Error(data.error || 'Server error');
     const replies = data.replies;
     if (!Array.isArray(replies) || !replies.length) throw new Error();
-    if (!isPro) { usedToday++; saveUsage(); }
+    if (!isPro) { usedToday++; saveUsage(); updateUI(); }
     const labels = ['Option A','Option B','Option C'];
     document.getElementById('repliesContainer').innerHTML = replies.map((r,i) => `
       <div class="reply-card">
