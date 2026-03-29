@@ -781,7 +781,10 @@ async function verifyOtpCode() {
       type: 'email'
     });
     if (error) throw new Error(error.message);
-    // Success — onAuthStateChange will fire and handle the rest
+    // Manually trigger session handling in case onAuthStateChange is slow
+    if (data.session) {
+      await onSession(data.session);
+    }
     closeModal('loginModal');
   } catch(e) {
     console.error('OTP verify error:', e);
