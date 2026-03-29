@@ -654,6 +654,7 @@ async function init() {
   if (session) await onSession(session);
 
   sb.auth.onAuthStateChange(async (_evt, session) => {
+    console.log('onAuthStateChange:', _evt, 'usedToday:', usedToday, 'session:', !!session);
     if (session) { await onSession(session); closeModal('loginModal'); }
     else { user = null; isPro = false; updateUI(); }
   });
@@ -869,7 +870,7 @@ async function generateReplies() {
     if (!res.ok) throw new Error(data.error || 'Server error');
     const replies = data.replies;
     if (!Array.isArray(replies) || !replies.length) throw new Error();
-    if (!isPro) { usedToday++; saveUsage(); updateUI(); }
+    if (!isPro) { usedToday++; saveUsage(); }
     const labels = ['Option A','Option B','Option C'];
     document.getElementById('repliesContainer').innerHTML = replies.map((r,i) => `
       <div class="reply-card">
