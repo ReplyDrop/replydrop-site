@@ -654,7 +654,6 @@ async function init() {
   if (session) await onSession(session);
 
   sb.auth.onAuthStateChange(async (_evt, session) => {
-    console.log('onAuthStateChange:', _evt, 'usedToday:', usedToday, 'session:', !!session);
     if (session) { await onSession(session); closeModal('loginModal'); }
     else { user = null; isPro = false; updateUI(); }
   });
@@ -980,6 +979,7 @@ function showMsg(id, text, type) {
   window.addEventListener('resize', () => { perPage = getPerPage(); sliderInit(); });
   sliderInit();
 })();
+init();
 </script>
 </body>
 </html>
